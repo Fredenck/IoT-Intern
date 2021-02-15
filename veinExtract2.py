@@ -9,7 +9,7 @@ for dirname, _, filenames in os.walk('input\\veinDB'):
         print(os.path.join(dirname, filename))
 
         # Set up Plots
-        fig, ax_list = plt.subplots(1, 4)
+        fig, ax_list = plt.subplots(1, 7)
 
         original = cv2.imread(os.path.join(dirname, filename), 0)
         ax_list[0].imshow(original, cmap='gray')
@@ -79,9 +79,14 @@ for dirname, _, filenames in os.walk('input\\veinDB'):
         # top_pos = normalized[whites[0][len(whites[0]) - 1]][whites[1][len(whites[1]) - 1]]
         # bottom_pos = normalized[whites[0][len(whites[0]) - 1]][whites[1][len(whites[1]) - 1]]
 
-
         # IV: Vein Extraction
-        
+        # A: Adaptive Threshold
+        adapThresh = cv2.adaptiveThreshold(temp, 255, cv2.ADAPTIVE_THRESH_MEAN_C, cv2.THRESH_BINARY, 15, 0)
+
+        # B: Median Filtering
+        median = cv2.medianBlur(adapThresh, 7)
+        # C: Massic Noise Removal
+        massRem = cv2.connectedComponents(median) # need to fix
 
 
         # Plot
@@ -97,6 +102,18 @@ for dirname, _, filenames in os.walk('input\\veinDB'):
         ax_list[3].imshow(temp, cmap='gray')
         ax_list[3].set_title('Refit')
         ax_list[3].set_xticks([]), ax_list[3].set_yticks([])
+
+        ax_list[4].imshow(adapThresh, cmap='gray')
+        ax_list[4].set_title('Adaptive Threshold')
+        ax_list[4].set_xticks([]), ax_list[4].set_yticks([])
+
+        ax_list[5].imshow(median, cmap='gray')
+        ax_list[5].set_title('Median Threshold')
+        ax_list[5].set_xticks([]), ax_list[5].set_yticks([])
+
+        # ax_list[6].imshow(massRem, cmap='gray')
+        # ax_list[6].set_title('Adaptive Threshold')
+        # ax_list[6].set_xticks([]), ax_list[6].set_yticks([])
 
 
         plt.draw()
