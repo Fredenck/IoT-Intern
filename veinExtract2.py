@@ -25,48 +25,35 @@ for dirname, _, filenames in os.walk('input\\veinDB'):
 
         # C: Normalize (resize + center)
         resized = cv2.resize(brightness, (240, 180))
+        trash = resized.copy()
+        ret, thresh = cv2.threshold(resized, 70, 255, cv2.THRESH_BINARY)
+        x, y, w, h = cv2.boundingRect(thresh)
+        top_pos = y
+        bottom_pos = y+h
+        # adjust cropped
+        left_pos = x
+        right_pos = x+w
 
-        ret, thresh = cv2.threshold(resized, 40, 255, cv2.THRESH_BINARY)
-        # x, y, w, h = cv2.boundingRect(thresh[:, 50:190])  # x,y is top left, ignore the left and right etra
-        # top_pos = y
-        # bottom_pos = y+h
-        # left_pos = x+50
-        # right_pos = x+w+50
+        cropped = resized.copy()
+        cropped = cropped[top_pos:bottom_pos][left_pos:right_pos]
 
-        top_pos = 0
-        bottom_pos = 180
-        left_pos = 0
-        right_pos = 240
-        meet = False
-        for i in range(0, 179):
-            if (thresh[i][120]==255 and not meet):
-                top_pos = i
-                meet = True
-            if (thresh[i][120]==0 and meet):
-                bottom_pos = i
-        meet = False
-        for i in range(0, 239):
-            if (thresh[90][i]==255 and not meet):
-                left_pos = i
-                meet = True
-            if (thresh[90][i]==0 and meet):
-                right_pos = i
         print(left_pos, top_pos, right_pos, bottom_pos)
-        xx = (int) (top_pos+bottom_pos)/2
-        # yy = (int) (left_pos+right_pos)/2
-
-        x_trans = int(resized.shape[0] // 2 - xx)
-        # y_trans = int(resized.shape[1] // 2 - yy)
 
         # Pad and remove pixels from image to perform translation
+        # xcom = (int) (top_pos+bottom_pos)/2
+        # ycom = (int) (left_pos+right_pos)/2
+        #
+        # x_trans = int(resized.shape[0]/2 - xcom)
+        # print(x_trans)
+        # y_trans = int(resized.shape[1]/2 - ycom)
 
-        if x_trans > 0:
-            temp = numpy.pad(resized, ((x_trans, 0), (0, 0)), mode='constant')
-            temp = temp[:resized.shape[0] - x_trans, :]
-        else:
-            temp = numpy.pad(resized, ((0, -x_trans), (0, 0)), mode='constant')
-            temp = temp[-x_trans:, :]
-
+        # if x_trans > 0:
+        #     temp = numpy.pad(resized, ((x_trans, 0), (0, 0)), mode='constant')
+        #     temp = temp[:resized.shape[0] - x_trans, :]
+        # else:
+        #     temp = numpy.pad(resized, ((0, -x_trans), (0, 0)), mode='constant')
+        #     temp = temp[-x_trans:, :]
+        #
         # if y_trans > 0:
         #     fit = numpy.pad(temp, ((0, 0), (y_trans, 0)), mode='constant')
         #     fit = fit[:, :resized.shape[0] - y_trans]
@@ -75,13 +62,9 @@ for dirname, _, filenames in os.walk('input\\veinDB'):
         #     fit = numpy.pad(temp, ((0, 0), (0, -y_trans)), mode='constant')
         #     fit = fit[:, -y_trans:]
 
-        # whites = numpy.nonzero(normalized)
-        # top_pos = normalized[whites[0][len(whites[0]) - 1]][whites[1][len(whites[1]) - 1]]
-        # bottom_pos = normalized[whites[0][len(whites[0]) - 1]][whites[1][len(whites[1]) - 1]]
-
         # IV: Vein Extraction
         # A: Adaptive Threshold
-        adapThresh = cv2.adaptiveThreshold(temp, 255, cv2.ADAPTIVE_THRESH_MEAN_C, cv2.THRESH_BINARY, 15, 0)
+        adapThresh = cv2.adaptiveThreshold(cropped, 255, cv2.ADAPTIVE_THRESH_MEAN_C, cv2.THRESH_BINARY, 15, 0)
 
         # B: Median Filtering
         median = cv2.medianBlur(adapThresh, 7)
@@ -94,12 +77,13 @@ for dirname, _, filenames in os.walk('input\\veinDB'):
         ax_list[1].set_title('Gaussian Blur')
         ax_list[1].set_xticks([]), ax_list[1].set_yticks([])
 
-        # cv2.rectangle(brightness, (left_pos, top_pos), (right_pos, bottom_pos), (255, 0, 0), -1)
+        # cv2.rectangle(thresh, (left_pos, top_pos), (right_pos, bottom_pos), (255, 255, 255), 3)
+        # ax_list[2].imshow(thresh, cmap='gray')
         ax_list[2].imshow(brightness, cmap='gray')
         ax_list[2].set_title('Normalize Light')
         ax_list[2].set_xticks([]), ax_list[2].set_yticks([])
 
-        ax_list[3].imshow(temp, cmap='gray')
+        ax_list[3].imshow(cropped, cmap='gray')
         ax_list[3].set_title('Refit')
         ax_list[3].set_xticks([]), ax_list[3].set_yticks([])
 
