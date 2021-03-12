@@ -3,27 +3,6 @@ import os
 from matplotlib import pyplot as plt
 import numpy as np
 
-def adapT(im, window):
-    img = im.copy()
-    rows, cols = img.shape
-    d = (int) ((window-1)/2)
-    for i in range(rows):
-        for j in range(cols):
-            sum = 0
-            n=0
-            for k in range(i-d, i+d+1):
-                for l in range(j-d, j+d+1):
-                    try:
-                        sum += img[k][l]
-                        n += 1
-                    except Exception:
-                        pass
-            avg = sum/n
-            if (img[i][j]>=avg):
-                img[i][j] = 0
-            else:
-                img[i][j] = 1
-    return img
 
 def ill(im):
     img = im.copy()
@@ -34,6 +13,7 @@ def ill(im):
         for j in range(cols):
             img[i][j] = ((img[i][j]-miin)*255) / (maax-miin)
     return img
+
 
 for dirname, _, filenames in os.walk('input\\veinDB'):
     for filename in filenames:
@@ -59,57 +39,24 @@ for dirname, _, filenames in os.walk('input\\veinDB'):
 
         # C: Normalize (resize + center)
         resized = cv2.resize(brightness, (240, 180))
-        trash = resized.copy()
+
         ret, thresh = cv2.threshold(resized, 90, 255, cv2.THRESH_BINARY)
         x, y, w, h = cv2.boundingRect(thresh)
-        top_pos = y
-        bottom_pos = y+h
-        # adjust cropped
-        left_pos = x
-        right_pos = x+w
+        top_pos = y; bottom_pos = y+h; left_pos = x; right_pos = x+w
 
         cropped = resized.copy()
         cropped = cropped[top_pos:bottom_pos][left_pos:right_pos]
 
-        print(left_pos, top_pos, right_pos, bottom_pos)
-
-        # Pad and remove pixels from image to perform translation
-        # xcom = (int) (top_pos+bottom_pos)/2
-        # ycom = (int) (left_pos+right_pos)/2
-        #
-        # x_trans = int(resized.shape[0]/2 - xcom)
-        # print(x_trans)
-        # y_trans = int(resized.shape[1]/2 - ycom)
-
-        # if x_trans > 0:
-        #     temp = numpy.pad(resized, ((x_trans, 0), (0, 0)), mode='constant')
-        #     temp = temp[:resized.shape[0] - x_trans, :]
-        # else:
-        #     temp = numpy.pad(resized, ((0, -x_trans), (0, 0)), mode='constant')
-        #     temp = temp[-x_trans:, :]
-        #
-        # if y_trans > 0:
-        #     fit = numpy.pad(temp, ((0, 0), (y_trans, 0)), mode='constant')
-        #     fit = fit[:, :resized.shape[0] - y_trans]
-        #
-        # else:
-        #     fit = numpy.pad(temp, ((0, 0), (0, -y_trans)), mode='constant')
-        #     fit = fit[:, -y_trans:]
-
-        #clah = cv2.createCLAHE(tileGridSize=(15,15)).apply(cropped)
+        # clah = cv2.createCLAHE(tileGridSize=(15,15)).apply(cropped)
 
         # IV: Vein Extraction
         # A: Adaptive Threshold
         adapThresh = cv2.adaptiveThreshold(cropped, 255, cv2.ADAPTIVE_THRESH_MEAN_C, cv2.THRESH_BINARY, 15, 0)
 
-        #adapThresh2 = cv2.adaptiveThreshold(cropped, 255, cv2.ADAPTIVE_THRESH_GAUSSIAN_C, cv2.THRESH_BINARY, 15, 0)
-
-        #adapThresh = adapT(cropped, 15)
-
-
         # B: Median Filtering
         median = cv2.medianBlur(adapThresh, 5)
-        # C: Massic Noise Removal
+
+        # C: Massive Noise Removal
         num_labels, labels, stats, centroids = cv2.connectedComponentsWithStats(median, connectivity=8) # need to fix
         massRem = np.zeros(labels.shape)
         sizes = stats[1:, -1]
@@ -149,7 +96,6 @@ for dirname, _, filenames in os.walk('input\\veinDB'):
         ax_list[6].imshow(~massRem.astype(int), cmap='gray')
         ax_list[6].set_title('CCL')
         ax_list[6].set_xticks([]), ax_list[6].set_yticks([])
-
 
         plt.draw()
         plt.show()
