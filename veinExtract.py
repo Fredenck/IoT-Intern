@@ -23,8 +23,9 @@ for dirname, _, filenames in os.walk('input\\veinDB'):
         # Set up Plots
         fig, ax_list = plt.subplots(1, 7)
 
-        original = cv2.imread(os.path.join(dirname, filename), 0)
-        # original = cv2.imread('modelVein.jpg', 0)
+        # original = cv2.imread(os.path.join(dirname, filename), 0)
+        original = cv2.imread('modelVein.jpg', 0)
+        # original = cv2.imread('llbpVein.png', 0)
         ax_list[0].imshow(original, cmap='gray')
         ax_list[0].set_title('Original')
         ax_list[0].set_xticks([]), ax_list[0].set_yticks([])
