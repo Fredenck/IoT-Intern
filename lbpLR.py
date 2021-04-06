@@ -1,12 +1,14 @@
 from skimage import feature
 import numpy as np
 from sklearn.svm import LinearSVC
+import matplotlib.pyplot as plt
 from imutils import paths
 import argparse
 import cv2
 import os
 import _pickle as cPickle
 # model = cPickle.loads(open("model.cpickle").read())
+
 
 def ill(im):
     img = im.copy()
@@ -17,6 +19,7 @@ def ill(im):
         for j in range(cols):
             img[i][j] = ((img[i][j]-miin)*255) / (maax-miin)
     return img
+
 
 def process(image):
     # III: PRE-PROCESSING
@@ -32,9 +35,9 @@ def process(image):
 
     ret, thresh = cv2.threshold(resized, 90, 255, cv2.THRESH_BINARY)
     x, y, w, h = cv2.boundingRect(thresh)
-    top_pos = y;
-    bottom_pos = y + h;
-    left_pos = x;
+    top_pos = y
+    bottom_pos = y + h
+    left_pos = x
     right_pos = x + w
 
     cropped = resized.copy()
@@ -62,6 +65,47 @@ def process(image):
     #     if area < 400:
     return ~massRem.astype(int)
 
+
+def get_pixel(img, center, x, y):
+    thresh = 0
+    try:
+        if img[x][y] >= center:
+            thresh = 1
+    except:
+        pass
+    return thresh
+
+def lbp_calculated_pixel(img, x, y):
+    center = img[x,y]
+
+    harr = []
+    for i in [-6, -5, -4, -3, -2, -1, 1, 2, 3, 4, 5, 6]:
+        harr.append(get_pixel(img, center, x+i, y))
+    power_val = [32, 16, 8, 4, 2, 1, 1, 2, 4, 8, 16, 32]
+    hval = 0
+    for i in range(len(harr)):
+        hval += harr[i] * power_val[i]
+
+    varr = []
+    for i in [-6, -5, -4, -3, -2, -1, 1, 2, 3, 4, 5, 6]:
+        varr.append(get_pixel(img, center, x+i, y))
+    power_val = [32, 16, 8, 4, 2, 1, 1, 2, 4, 8, 16, 32]
+    vval = 0
+    for i in range(len(harr)):
+        vval += harr[i] * power_val[i]
+
+    return (hval**2 + vval**2)**0.5
+
+
+def LLBP(img):
+    height, width = img.shape
+    img_lbp = np.zeros((height, width, 3), np.uint8)
+    for i in range(0, height):
+        for j in range(0, width):
+            img_lbp[i, j] = lbp_calculated_pixel(img, i, j)
+    return img_lbp
+
+
 numPoints = 24
 radius = 8
 eps = 1e-7
@@ -69,50 +113,58 @@ data = []
 labels = []
 
 # loop over the trainingCR images
+if input("Train? ") == "Yes":
+    for dirname, _, filenames in os.walk('input\\veinDB'):
+        for filename in filenames:
+            imagePath = os.path.join(dirname, filename)
+            if imagePath.split(os.path.sep)[-1][7:9] == "db": #Ignoring thumbs.db
+                continue
+            # if imagePath.split(os.path.sep)[-1] != "index_1.bmp":
+            #     continue
+            if imagePath.split(os.path.sep)[-3] == "082":
+                break
+            print(imagePath)
+            # print(imagePath.split(os.path.sep)[-1][7:9])
+            # load the image, convert it to grayscale, and describe it
+            original = cv2.imread(imagePath, 0)
+            processed = process(original)
 
-for dirname, _, filenames in os.walk('input\\veinDB'):
-    for filename in filenames:
-        imagePath = os.path.join(dirname, filename)
-        if imagePath.split(os.path.sep)[-1][7:9] == "db": #Ignoring thumbs.db
+            # describe
+            # each [0,numPoints+2], is possible rotation invarient prototypes
+            # lbp = feature.local_binary_pattern(processed, numPoints, radius, method="uniform")
+            lbp = LLBP(processed)
+            # print(str(len(lbp)) + " " + str(len(lbp[0])) + " " + str(lbp[0][0]))
+            (desc, _) = np.histogram(lbp.ravel(), # p points -> p+1 uniform patterns
+                                     bins=np.arange(0, numPoints + 3),
+                                     range=(0, numPoints + 2))
+            # how many values for each rotation invarient prototype
+            # print(desc)
+            # normalize the histogram
+            desc = desc.astype("float") # sum to 1
+            desc /= (desc.sum() + eps)
+
+            # print(desc)
+            # plt.hist(lbp.ravel(), bins=np.arange(0, numPoints + 3),range=(0, numPoints + 2))
+            # plt.plot(desc)
+            # plt.show()
+            # extract the label from the image path, then update the
+            # label and data lists
+            # print(imagePath.split(os.path.sep)[-2])
+            labels.append(imagePath.split(os.path.sep)[-2])
+            data.append(desc)
+        else:
             continue
-        # if imagePath.split(os.path.sep)[-1] != "index_1.bmp":
-        #     continue
-        if imagePath.split(os.path.sep)[-3] == "082":
-            break
-        print(imagePath)
-        # print(imagePath.split(os.path.sep)[-1][7:9])
-        # load the image, convert it to grayscale, and describe it
-        original = cv2.imread(imagePath, 0)
+        break
 
-        processed = process(original)
+    # train a Linear SVM on the data
+    model = LinearSVC(C=1, max_iter=10000, random_state=42)
+    model.fit(data, labels)
 
-        # describe
-        lbp = feature.local_binary_pattern(processed, numPoints, radius, method="uniform")
-        (desc, _) = np.histogram(lbp.ravel(),
-                                 bins=np.arange(0, numPoints + 3),
-                                 range=(0, numPoints + 2))
-        # normalize the histogram
-        desc = desc.astype("float")
-        desc /= (desc.sum() + eps)
+    f = open("model.cpickle", "wb")
+    f.write(cPickle.dumps(model))
+    f.close()
 
-        # extract the label from the image path, then update the
-        # label and data lists
-        # print(imagePath.split(os.path.sep)[-2])
-        labels.append(imagePath.split(os.path.sep)[-2])
-        data.append(desc)
-    else:
-        continue
-    break
-
-# train a Linear SVM on the data
-model = LinearSVC(C=100.0, max_iter=10000, random_state=42)
-model.fit(data, labels)
-
-f = open("model.cpickle", "w")
-f.write(cPickle.dumps(model))
-f.close()
-
-model = cPickle.loads(open("model.cpickle").read())
+model = cPickle.loads(open("model.cpickle", "rb").read())
 
 # loop over the testing images
 # for dirname, _, filenames in os.walk('input/veinTesting'):
@@ -136,8 +188,8 @@ for dirname, _, filenames in os.walk('input\\veinDB'):
         processed = process(original)
 
         # describe
-        lbp = feature.local_binary_pattern(processed, numPoints,
-                                           radius, method="uniform")
+        # lbp = feature.local_binary_pattern(processed, numPoints, radius, method="uniform")
+        lbp = LLBP(processed)
         (desc, _) = np.histogram(lbp.ravel(),
                                  bins=np.arange(0, numPoints + 3),
                                  range=(0, numPoints + 2))
