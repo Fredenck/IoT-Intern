@@ -1,5 +1,7 @@
 from skimage import feature
 import numpy as np
+from sklearn.decomposition import PCA
+from sklearn.preprocessing import StandardScaler
 from sklearn.svm import LinearSVC
 import matplotlib.pyplot as plt
 from imutils import paths
@@ -7,6 +9,8 @@ import argparse
 import cv2
 import os
 import _pickle as cPickle
+import time
+start_time = time.time()
 # model = cPickle.loads(open("model.cpickle").read())
 
 
@@ -42,7 +46,7 @@ def process(image):
 
     cropped = resized.copy()
     cropped = cropped[top_pos:bottom_pos][left_pos:right_pos]
-
+    cropped = cv2.resize(cropped, (40, 30))
     # clah = cv2.createCLAHE(tileGridSize=(15,15)).apply(cropped)
 
     # IV: Vein Extraction
@@ -99,7 +103,7 @@ def lbp_calculated_pixel(img, x, y):
 
 def LLBP(img):
     height, width = img.shape
-    img_lbp = np.zeros((height, width, 3), np.uint8)
+    img_lbp = np.zeros((height, width), np.uint8)
     for i in range(0, height):
         for j in range(0, width):
             img_lbp[i, j] = lbp_calculated_pixel(img, i, j)
@@ -119,8 +123,6 @@ if input("Train? ") == "Yes":
             imagePath = os.path.join(dirname, filename)
             if imagePath.split(os.path.sep)[-1][7:9] == "db": #Ignoring thumbs.db
                 continue
-            # if imagePath.split(os.path.sep)[-1] != "index_1.bmp":
-            #     continue
             if imagePath.split(os.path.sep)[-3] == "082":
                 break
             print(imagePath)
@@ -139,25 +141,30 @@ if input("Train? ") == "Yes":
                                      range=(0, numPoints + 2))
             # how many values for each rotation invarient prototype
             # print(desc)
-            # normalize the histogram
-            desc = desc.astype("float") # sum to 1
+            # normalize the histogram, sum to 1
+            desc = desc.astype("float")
             desc /= (desc.sum() + eps)
 
             # print(desc)
-            # plt.hist(lbp.ravel(), bins=np.arange(0, numPoints + 3),range=(0, numPoints + 2))
             # plt.plot(desc)
             # plt.show()
-            # extract the label from the image path, then update the
-            # label and data lists
-            # print(imagePath.split(os.path.sep)[-2])
+
+            # extract the label from the image path, then update the label and data lists
             labels.append(imagePath.split(os.path.sep)[-2])
+            # labels.append(filename[0:len(filename)-6])
             data.append(desc)
         else:
             continue
         break
 
+    # ss = StandardScaler()
+    # vein_stand = ss.fit_transform(data)
+    # pca = PCA(n_components=500)
+    # vein_pca = ss.fit_transform(vein_stand)
+
     # train a Linear SVM on the data
     model = LinearSVC(C=1, max_iter=10000, random_state=42)
+    # model.fit(vein_pca, labels)
     model.fit(data, labels)
 
     f = open("model.cpickle", "wb")
@@ -200,15 +207,22 @@ for dirname, _, filenames in os.walk('input\\veinDB'):
         prediction = model.predict(desc.reshape(1, -1))
 
         print(imagePath)
-        print(prediction[0] + ": " + imagePath.split(os.path.sep)[-2])
+        print("predict: " + prediction[0] + " and actual: " + imagePath.split(os.path.sep)[-2])
         if prediction[0] == imagePath.split(os.path.sep)[-2]:
             correct += 1
         total += 1
+
+        # print("predict: " + prediction[0] + "and actual: " + filename[0:len(filename)-6])
+        # if prediction[0] == filename[0:len(filename)-6]:
+        #     correct += 1
+        # total += 1
+
         # display the image and the prediction
-        cv2.putText(original, prediction[0], (10, 30), cv2.FONT_HERSHEY_SIMPLEX,
-                    1.0, (255, 255, 255), 3)
+        # cv2.putText(original, prediction[0], (10, 30), cv2.FONT_HERSHEY_SIMPLEX,
+        #             1.0, (255, 255, 255), 3)
         # cv2.imshow("Image", original)
         # cv2.waitKey(0)
 print(correct)
 print(total)
 print(correct/total)
+print(time.time() - start_time)
