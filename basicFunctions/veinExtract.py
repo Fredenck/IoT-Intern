@@ -3,19 +3,7 @@ import os
 from matplotlib import pyplot as plt
 import numpy as np
 
-
-def ill(im):
-    img = im.copy()
-    rows, cols = img.shape
-    maax = max(map(max, img))
-    miin = min(map(min, img))
-    for i in range(rows):
-        for j in range(cols):
-            img[i][j] = ((img[i][j]-miin)*255) / (maax-miin)
-    return img
-
-
-for dirname, _, filenames in os.walk('input\\veinDB'):
+for dirname, _, filenames in os.walk('../input/veinDB'):
     for filename in filenames:
         # Directory
         print(os.path.join(dirname, filename))
@@ -24,7 +12,7 @@ for dirname, _, filenames in os.walk('input\\veinDB'):
         fig, ax_list = plt.subplots(1, 7)
 
         # original = cv2.imread(os.path.join(dirname, filename), 0)
-        original = cv2.imread('modelVein.jpg', 0)
+        original = cv2.imread('../usefulImages/modelVein.jpg', 0)
         # original = cv2.imread('llbpVein.png', 0)
         ax_list[0].imshow(original, cmap='gray')
         ax_list[0].set_title('Original')
@@ -35,8 +23,7 @@ for dirname, _, filenames in os.walk('input\\veinDB'):
         blur = cv2.GaussianBlur(original, (3, 3), 1, 1, cv2.BORDER_DEFAULT)  # 3x3 matrix, becaue r = 1; stdev of 1
 
         # B: Dispelling Illumination (transform bright/dim)
-        # brightness = cv2.normalize(blur, dst=None, alpha=0, beta=255, norm_type=cv2.NORM_MINMAX, dtype=cv2.CV_8U)
-        brightness = ill(blur)
+        brightness = cv2.normalize(blur, None, 0, 255, cv2.NORM_MINMAX)
 
         # C: Normalize (resize + center)
         resized = cv2.resize(brightness, (340, 240))

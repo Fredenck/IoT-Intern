@@ -1,3 +1,7 @@
+"""
+Adapted from https://opencv-python-tutroals.readthedocs.io/en/latest/py_tutorials/py_imgproc/py_canny/py_canny.html
+Basic Canny Edge Detection
+"""
 import cv2
 from matplotlib import pyplot as plt
 from matplotlib.widgets import Slider
@@ -5,7 +9,7 @@ from matplotlib.widgets import Slider
 fig, ax_list = plt.subplots(1, 3)
 # fig = plt.figure()
 
-img = cv2.imread('simpleFace.jpg', 0)
+img = cv2.imread('../usefulImages/simpleFace.jpg', 0)
 defaultCanny = cv2.Canny(img, 100, 200)
 
 ax_list = ax_list.ravel()

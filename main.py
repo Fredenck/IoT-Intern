@@ -1,5 +1,4 @@
-import veinExtract
-import lbp
+from basicFunctions import veinExtract
 
 veinExtract.py
 

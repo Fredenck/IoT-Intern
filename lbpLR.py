@@ -11,18 +11,6 @@ import os
 import _pickle as cPickle
 import time
 start_time = time.time()
-# model = cPickle.loads(open("model.cpickle").read())
-
-
-def ill(im):
-    img = im.copy()
-    rows, cols = img.shape
-    maax = max(map(max, img))
-    miin = min(map(min, img))
-    for i in range(rows):
-        for j in range(cols):
-            img[i][j] = ((img[i][j]-miin)*255) / (maax-miin)
-    return img
 
 
 def process(image):
@@ -31,10 +19,9 @@ def process(image):
     blur = cv2.GaussianBlur(original, (3, 3), 1, 1, cv2.BORDER_DEFAULT)  # 3x3 matrix, becaue r = 1; stdev of 1
 
     # B: Dispelling Illumination (transform bright/dim)
-    # brightness = cv2.normalize(blur, dst=None, alpha=0, beta=255, norm_type=cv2.NORM_MINMAX, dtype=cv2.CV_8U)
-    brightness = ill(blur)
+    brightness = cv2.normalize(blur, None, 0, 255, cv2.NORM_MINMAX)
 
-    # C: Normalize (resize + center)
+    # C: Normalize (resize + center), 75% of original 320x240
     resized = cv2.resize(brightness, (240, 180))
 
     ret, thresh = cv2.threshold(resized, 90, 255, cv2.THRESH_BINARY)
@@ -79,7 +66,8 @@ def get_pixel(img, center, x, y):
         pass
     return thresh
 
-def lbp_calculated_pixel(img, x, y):
+
+def llbp_calculated_pixel(img, x, y):
     center = img[x,y]
 
     harr = []
@@ -92,7 +80,7 @@ def lbp_calculated_pixel(img, x, y):
 
     varr = []
     for i in [-6, -5, -4, -3, -2, -1, 1, 2, 3, 4, 5, 6]:
-        varr.append(get_pixel(img, center, x+i, y))
+        varr.append(get_pixel(img, center, x, y+i))
     power_val = [32, 16, 8, 4, 2, 1, 1, 2, 4, 8, 16, 32]
     vval = 0
     for i in range(len(harr)):
@@ -106,7 +94,7 @@ def LLBP(img):
     img_lbp = np.zeros((height, width), np.uint8)
     for i in range(0, height):
         for j in range(0, width):
-            img_lbp[i, j] = lbp_calculated_pixel(img, i, j)
+            img_lbp[i, j] = llbp_calculated_pixel(img, i, j)
     return img_lbp
 
 
@@ -167,11 +155,11 @@ if input("Train? ") == "Yes":
     # model.fit(vein_pca, labels)
     model.fit(data, labels)
 
-    f = open("model.cpickle", "wb")
+    f = open("models/model.cpickle", "wb")
     f.write(cPickle.dumps(model))
     f.close()
 
-model = cPickle.loads(open("model.cpickle", "rb").read())
+model = cPickle.loads(open("models/model.cpickle", "rb").read())
 
 # loop over the testing images
 # for dirname, _, filenames in os.walk('input/veinTesting'):

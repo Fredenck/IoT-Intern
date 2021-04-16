@@ -1,3 +1,7 @@
+'''
+Adapted from https://www.pyimagesearch.com/2015/12/07/local-binary-patterns-with-python-opencv/
+LBP and LinearSVM
+'''
 from skimage import feature
 import numpy as np
 from sklearn.svm import LinearSVC
@@ -20,7 +24,7 @@ data = []
 labels = []
 
 # loop over the trainingCR images
-for dirname, _, filenames in os.walk('input/trainingCR'):
+for dirname, _, filenames in os.walk('../input/trainingCR'):
     for filename in filenames:
         imagePath = os.path.join(dirname, filename)
         print(imagePath)
@@ -52,7 +56,7 @@ model = LinearSVC(C=100.0, max_iter=10000, random_state=42)
 model.fit(data, labels)
 
 # loop over the testingCR images
-for dirname, _, filenames in os.walk('input/testingCR'):
+for dirname, _, filenames in os.walk('../input/testingCR'):
     for filename in filenames:
         imagePath = os.path.join(dirname, filename)
         # load the image, convert it to grayscale, describe it,
