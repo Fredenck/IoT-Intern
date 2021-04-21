@@ -37,7 +37,7 @@ plots[1].imshow(distortedImg)
 
 # sift = cv2.xfeatures2d.SIFT_create()
 sift = cv2.SIFT()
-
+print("goood")
 train_keypoints, train_descriptor = sift.detectAndCompute(image, None)
 test_keypoints, test_descriptor = sift.detectAndCompute(distortedImg, None)
 print("good")
