@@ -39,8 +39,6 @@ for dirname, _, filenames in os.walk('../input/trainingCR'):
                                  bins=np.arange(0, numPoints + 3),
                                  range=(0, numPoints + 2))
         print(desc)
-        plt.plot(desc)
-        plt.show()
         # normalize the histogram
         desc = desc.astype("float")
         desc /= (desc.sum() + eps)
@@ -52,6 +50,8 @@ for dirname, _, filenames in os.walk('../input/trainingCR'):
         data.append(desc)
 
 # train a Linear SVM on the data
+print(str(len(data)) + " " + str(len(data[0])))
+print(str(len(labels)) + " " + str(len(labels[0])))
 model = LinearSVC(C=100.0, max_iter=10000, random_state=42)
 model.fit(data, labels)
 

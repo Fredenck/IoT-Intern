@@ -14,7 +14,7 @@ import matplotlib.pyplot as plt
 import numpy as np
 
 # Load the image
-image = cv2.imread('../usefulImages/lenna.png', 0)
+image = cv2.imread('../usefulImages/modelVein.jpg', 0)
 # Create test image by adding Scale Invariance and Rotational Invariance
 distortedImg = cv2.pyrDown(image)
 distortedImg = cv2.pyrDown(distortedImg)
@@ -36,7 +36,7 @@ plots[1].imshow(distortedImg)
 # ## Detect keypoints and Create Descriptor
 
 # sift = cv2.xfeatures2d.SIFT_create()
-sift = cv2.SIFT()
+sift = cv2.SIFT_create()
 print("goood")
 train_keypoints, train_descriptor = sift.detectAndCompute(image, None)
 test_keypoints, test_descriptor = sift.detectAndCompute(distortedImg, None)
