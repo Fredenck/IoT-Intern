@@ -17,7 +17,13 @@ start_time = time.time()
 
 data = cPickle.loads(open("models/retinaVeinData.cpickle", "rb").read())
 labels = cPickle.loads(open("models/retinaVeinLabels.cpickle", "rb").read())
-model = cPickle.loads(open("models/smallerRetinaVein.cpickle", "rb").read())
+model = cPickle.loads(open("models/retinaVein.cpickle", "rb").read())
+
+
+
+# data = cPickle.loads(open("models/retinaVeinData.cpickle", "rb").read())
+# labels = cPickle.loads(open("models/retinaVeinLabels.cpickle", "rb").read())
+# model = cPickle.loads(open("models/smallerRetinaVein.cpickle", "rb").read())
 
 # data = cPickle.loads(open("models/smallerRetinaVeinData.cpickle", "rb").read())
 # labels = cPickle.loads(open("models/smallerRetinaVeinLabels.cpickle", "rb").read())

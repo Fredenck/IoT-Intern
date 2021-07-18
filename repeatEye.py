@@ -10,17 +10,18 @@ from sklearn.model_selection import train_test_split
 from sklearn.svm import LinearSVC
 
 def process(im):
-    imc = cv2.createCLAHE(clipLimit=2.0, tileGridSize=(8, 8)).apply(im)
+    # III: PRE-PROCESSING
+    # A: Noise Removal (typical blur)
+    blur = cv2.GaussianBlur(im, (3, 3), 1, 1, cv2.BORDER_DEFAULT)  # 3x3 matrix, becaue r = 1; stdev of 1
+
+    # B: Dispelling Illumination (transform bright/dim)
+    brightness = cv2.normalize(blur, None, 0, 255, cv2.NORM_MINMAX)
+
+    # C: Normalize (resize + center), 75% of original 320x240
+    resized = cv2.resize(brightness, (240, 180))
+    imc = cv2.createCLAHE(clipLimit=2.0, tileGridSize=(8, 8)).apply(resized)
     adapT = cv2.adaptiveThreshold(imc, 255, cv2.ADAPTIVE_THRESH_MEAN_C, cv2.THRESH_BINARY, 15, 0)
-    # adapT = cv2.adaptiveThreshold(adapT, 255, cv2.ADAPTIVE_THRESH_MEAN_C, cv2.THRESH_BINARY, 15, 0)
-    # adapT = cv2.adaptiveThreshold(adapT, 255, cv2.ADAPTIVE_THRESH_MEAN_C, cv2.THRESH_BINARY, 15, 0)
-    # adapT = cv2.adaptiveThreshold(adapT, 255, cv2.ADAPTIVE_THRESH_MEAN_C, cv2.THRESH_BINARY, 15, 0)
-    # adapT = cv2.adaptiveThreshold(adapT, 255, cv2.ADAPTIVE_THRESH_MEAN_C, cv2.THRESH_BINARY, 15, 0)
     median = cv2.medianBlur(adapT, 5)
-    # median = cv2.medianBlur(median, 5)
-    # median = cv2.medianBlur(median, 5)
-    # median = cv2.medianBlur(median, 5)
-    # median = cv2.medianBlur(median, 5)
 
     return median
     num_labels, labels, stats, centroids = cv2.connectedComponentsWithStats(median, connectivity=8)  # need to fix
@@ -32,11 +33,6 @@ def process(im):
             massRem[labels == i + 1] = 255
     return massRem
 
-# im = cv2.imread("input/smallerretinaVein/Moderate/000c1434d8d7.png", 0)
-# processed = process(im)
-# cv2.imshow("a", im)
-# cv2.imshow("a", processed)
-# cv2.waitKey(0)
 
 start_time = time.time()
 labels = []
