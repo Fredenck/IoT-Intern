@@ -38,6 +38,9 @@ for dirname, _, filenames in os.walk('input\\retinaVein'):
         im = cv2.imread(imagePath, 0)
         processed = process(im)
 
+        # CNN:
+        # https: // www.datacamp.com / community / tutorials / convolutional - neural - networks - python
+
         image8bit = cv2.normalize(processed, None, 0, 255, cv2.NORM_MINMAX).astype('uint8')
         lbp = feature.local_binary_pattern(image8bit, 24, 8, method="uniform")
         (desc, _) = np.histogram(lbp.ravel(),

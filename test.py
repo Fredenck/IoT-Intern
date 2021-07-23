@@ -1,32 +1,21 @@
-import cv2
 import numpy as np
 import os
 import time
 import _pickle as cPickle
 
-from skimage import feature
-from sklearn.gaussian_process import GaussianProcessClassifier
 from sklearn.metrics import f1_score, precision_score, recall_score, precision_recall_fscore_support, accuracy_score
-from sklearn.model_selection import train_test_split
-from sklearn.neighbors import KNeighborsClassifier
-from sklearn.svm import LinearSVC, SVC
 
-import numpy as np
-import matplotlib.pyplot as plt
-from matplotlib.colors import ListedColormap
+
 from sklearn.model_selection import train_test_split
-from sklearn.preprocessing import StandardScaler
-from sklearn.datasets import make_moons, make_circles, make_classification
-from sklearn.neural_network import MLPClassifier
-from sklearn.neighbors import KNeighborsClassifier
 from sklearn.svm import SVC
-from sklearn.gaussian_process import GaussianProcessClassifier
-from sklearn.gaussian_process.kernels import RBF
 from sklearn.tree import DecisionTreeClassifier
 from sklearn.ensemble import RandomForestClassifier, AdaBoostClassifier
 from sklearn.naive_bayes import GaussianNB
 from sklearn.discriminant_analysis import QuadraticDiscriminantAnalysis
 
+from sklearn.neural_network import MLPClassifier
+from sklearn.neighbors import KNeighborsClassifier
+from sklearn.metrics import accuracy_score
 
 start_time = time.time()
 
@@ -61,8 +50,8 @@ classifiers = [
     ("MLP, alpha1", MLPClassifier(alpha=1, max_iter=1000)), #64.8
     ("AdaBoost", AdaBoostClassifier()), #89.8
     ("GaussianNB", GaussianNB()), #82.03
+    ("Quadratic Discrim", QuadraticDiscriminantAnalysis()), #89.1; variables are colinear warning
     ("MLP hidden layer", MLPClassifier(hidden_layer_sizes=(3), max_iter=10000000)), # 86.2
-    ("Quadratic Discrim", QuadraticDiscriminantAnalysis())#89.1; variables are colinear warning
 ]
 
 X_train, X_test, y_train, y_test = train_test_split(data, labels, test_size=0.15)
